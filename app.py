@@ -1,32 +1,45 @@
 from flask import Flask, render_template, request,redirect
 from prediction_pipeline import preprocessing,vectorizer,get_prediction
+from logger import logging
 
 app = Flask(__name__)
+logging.info("Flask server started")
 
 data = dict()
 reviews = []
-positive_r = 0
-negative_r = 0
+positive = 0
+negative = 0
 @app.route("/")
 def index():
     data['reviews'] = reviews
-    data['positive'] = positive_r
-    data['negative'] = negative_r
+    data['positive'] = positive
+    data['negative'] = negative
+
+    logging.info("=========== Open Home Page ===========")
+
+
     return render_template('index.html',data=data)
 
 @app.route("/", methods=['POST'])
 def my_post():
     text = request.form['text']
-    preprocessed_text = preprocessing(text)
-    vectorized_text = vectorizer(preprocessed_text)
-    prediction = get_prediction(vectorized_text)
+    logging.info(f'Text:{text}')
 
-    if prediction == 'negative_r':
-        global negative_r
-        negative_r += 1
+    preprocessed_text = preprocessing(text)
+    logging.info(f'Preprocessed Text:{preprocessed_text}')
+
+    vectorized_text = vectorizer(preprocessed_text)
+    logging.info(f'Vectorized Text:{vectorized_text}')
+
+    prediction = get_prediction(vectorized_text)
+    logging.info(f'Prediction:{prediction}')
+
+    if prediction == 'negative':
+        global negative
+        negative += 1
     else:
-        global positive_r
-        positive_r += 1
+        global positive
+        positive += 1
 
     reviews.insert(0,text)
     return redirect(request.url)
